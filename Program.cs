@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using Uamqp.Lib;
+﻿using Uamqp.Lib;
 
 namespace CSharp;
 
