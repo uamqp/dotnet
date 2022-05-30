@@ -1,57 +1,36 @@
 ﻿using System.Runtime.InteropServices;
+using Uamqp.Lib;
 
 namespace CSharp;
 
 public delegate void PtrCallack(IntPtr ptr);
-public delegate void Callack();
 
 public class Program
 {
     public static async Task Main(string[] args)
     {
-        IntPtr loop = create_async_loop();
-        Console.WriteLine($"Loop ptr: {loop}");
+        Loop loop = new();
+        Console.WriteLine($"Loop ptr: {loop._ptr}");
 
-        connect(loop, Marshal.GetFunctionPointerForDelegate(new PtrCallack((IntPtr connPtr) =>
+        Connection conn = await loop.ConnectAsync();
+        Console.WriteLine($"Connection ptr: {conn._ptr}");
+
+        Channel channel = await conn.CreateChannelAsync();
+        Console.WriteLine($"Channel ptr: {channel._channelPtr}");
+
+        await channel.QueueDeclareAsync();
+        Console.WriteLine($"Declared queue!");
+
+        await Task.WhenAll(Enumerable.Range(1, 5).Select(async (_) =>
         {
-            Console.WriteLine($"Connection ptr: {connPtr}");
+            Channel channel1 = await conn.CreateChannelAsync();
+            Console.WriteLine($"Channel ptr: {channel1._loopPtr}");
 
-            create_channel(loop, connPtr, Marshal.GetFunctionPointerForDelegate(new PtrCallack((IntPtr channelPtr) =>
-            {
-                Console.WriteLine($"Channel ptr: {channelPtr}");
+            Consumer consumer = await channel1.BasicConsumeAsync();
+            Console.WriteLine($"Consumer ptr: {consumer._ptr}");
+        }));
 
-                queue_declare(loop, channelPtr, Marshal.GetFunctionPointerForDelegate(new Callack(() =>
-                {
-                    Console.WriteLine($"Declared queue!");
-
-                    create_channel(loop, connPtr, Marshal.GetFunctionPointerForDelegate(new PtrCallack((IntPtr channelPtr) =>
-                    {
-                        Console.WriteLine($"Channel ptr: {channelPtr}");
-
-                        basic_consume(loop, channelPtr, Marshal.GetFunctionPointerForDelegate(new PtrCallack((IntPtr consumerPtr) =>
-                        {
-                            Console.WriteLine($"Consumer ptr: {consumerPtr}");
-                        })));
-                    })));
-                })));
-            })));
-        })));
-
+        Console.WriteLine($"Done");
         await Task.Delay(10000);
     }
-
-    [DllImport("../../../../lib/target/debug/libuamqp.so")]
-    private static extern IntPtr create_async_loop();
-
-    [DllImport("../../../../lib/target/debug/libuamqp.so")]
-    private static extern void connect(IntPtr rnt, IntPtr callback);
-
-    [DllImport("../../../../lib/target/debug/libuamqp.so")]
-    private static extern void create_channel(IntPtr rnt, IntPtr conn, IntPtr callback);
-
-    [DllImport("../../../../lib/target/debug/libuamqp.so")]
-    private static extern void queue_declare(IntPtr rnt, IntPtr channel, IntPtr callback);
-
-    [DllImport("../../../../lib/target/debug/libuamqp.so")]
-    private static extern void basic_consume(IntPtr rnt, IntPtr channel, IntPtr callback);
 }
