@@ -27,7 +27,19 @@ public class Program
 
             Consumer consumer = await channel1.BasicConsumeAsync();
             Console.WriteLine($"Consumer ptr: {consumer._ptr}");
+
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    await consumer.NextAsync();
+                }
+            });
         }));
+
+        await Task.Delay(1000);
+
+        await channel.BasicPublishAsync();
 
         Console.WriteLine($"Done");
         await Task.Delay(10000);

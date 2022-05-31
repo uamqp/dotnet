@@ -27,4 +27,16 @@ internal static class ChannelAsync
 
         return res.Task;
     }
+
+    public static Task BasicPublishAsync(IntPtr loopPtr, IntPtr channelPtr)
+    {
+        TaskCompletionSource res = new();
+
+        ChannelNative.basic_publish(loopPtr, channelPtr, Marshal.GetFunctionPointerForDelegate(new Callack(() =>
+        {
+            res.SetResult();
+        })));
+
+        return res.Task;
+    }
 }

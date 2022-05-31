@@ -10,4 +10,6 @@ public class Consumer
         _loop = loop;
         _ptr = ptr;
     }
+
+    public async Task NextAsync() => await ConsumerAsync.NextAsync(_loop, _ptr);
 }

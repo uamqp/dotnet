@@ -14,4 +14,6 @@ public class Channel
     public async Task QueueDeclareAsync() => await ChannelAsync.QueueDeclareAsync(_loopPtr, _channelPtr);
 
     public async Task<Consumer> BasicConsumeAsync() => new Consumer(_loopPtr, await ChannelAsync.BasicConsumeAsync(_loopPtr, _channelPtr));
+
+    public async Task BasicPublishAsync() => await ChannelAsync.BasicPublishAsync(_loopPtr, _channelPtr);
 }
